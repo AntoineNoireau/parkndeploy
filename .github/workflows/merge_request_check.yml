@@ -18,7 +18,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16 
+          node-version: 18 
 
       - name: Install dependencies and build
         run: |
@@ -41,7 +41,7 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0 
+          dotnet-version: 8.0 
 
       - name: Build backend in Release mode
         run: dotnet build --configuration Release
