@@ -1,0 +1,73 @@
+name: CI Release Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  frontend_ci:
+    name: Build and Publish Frontend Artifact
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies and build
+        run: |
+          npm install
+          npm run build
+        working-directory: ./frontend
+
+      - name: Upload Frontend Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-app
+          path: ./frontend/build
+
+  backend_ci:
+    name: Build and Publish Backend Artifact
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0
+
+      - name: Publish Backend App
+        run: |
+          dotnet publish -c Release -o ./output
+        working-directory: ./backend
+
+      - name: Upload Backend Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-app
+          path: ./backend/output
+
+  trigger_cd_pipeline:
+    name: Trigger CD Pipeline
+    needs: [frontend_ci, backend_ci]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger CD Workflow
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-infra-and-apps.yml', 
+              ref: 'main' 
+            })
